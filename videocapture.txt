@@ -1,0 +1,30 @@
+# SDP20 Team 9: Clover
+import picamera
+from time import sleep
+
+# setup camera such that is closes when we are done with it!
+x = False
+t = 1
+print("Would you like a video? (y/n)")
+if (input() == "y"):
+    x = True
+    print("How long (in seconds)? ")
+    t = input()
+elif (input() == "n"):
+    x = False
+    print("Video not taken")
+else:
+    print("invalid input")
+
+if (x == True):
+  print("About to take a video!")
+  with picamera.PiCamera() as camera:
+    camera.resolution = (1280,720);
+    camera.rotation = 180
+    camera.start_preview()
+    camera.start_recording('/home/pi/Desktop/wedemboyz.h264')
+    sleep(int(t))
+    camera.stop_recording()
+    camera.stop_preview()
+  print ("Video taken!")
+    
