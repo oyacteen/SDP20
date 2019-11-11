@@ -24,6 +24,7 @@ struct package
   int temperature ;
   int humidity ;
   int moisture;
+  int light;
 };
 
 
@@ -40,6 +41,7 @@ unsigned long delayTime;
   data.humidity = DHT.humidity;
   data.temperature = DHT.temperature;
   data.moisture = analogRead(0);
+  data.light = analogRead(1);
 }
 
 bool AlertCheck(){
@@ -93,6 +95,8 @@ void loop()
   delay(500);
   Serial.print("Moisture = ");
   Serial.println(data.moisture);
+  Serial.print("Light = ");
+  Serial.println(data.light);
   delay(500);
   //Serial.print("Humidity = ");
   //Serial.println(DHT.humidity);
@@ -102,10 +106,10 @@ void loop()
     digitalWrite(red_led, HIGH); // Flash a light to show transmitting
     //Bluetooth.println("Your plant is too hot and humid!");
     //Bluetooth.print("Temperature = ");
-    Bluetooth.print(DHT.temperature);
+    Bluetooth.print(data.moisture);
     Bluetooth.print(" ");
-    //Bluetooth.print("Humidity = ");
-    Bluetooth.print(DHT.humidity);
+    //Bluetooth.print("Light = ");
+    Bluetooth.print(data.light);
     Bluetooth.print("\n");
     delay(2000);
     digitalWrite(red_led,LOW);
@@ -114,10 +118,10 @@ void loop()
     digitalWrite(green_led,HIGH);
     //Bluetooth.println("Your plant is healthy and happy!");
     //Bluetooth.print("Temperature = ");
-    Bluetooth.print(DHT.temperature);
+    Bluetooth.print(data.moisture);
     Bluetooth.print(" ");
-    //Bluetooth.print("Humidity = ");
-    Bluetooth.print(DHT.humidity);
+    //Bluetooth.print("Light = ");
+    Bluetooth.print(data.light);
     Bluetooth.print("\n");
     delay(2000);
     digitalWrite(green_led,LOW); 
