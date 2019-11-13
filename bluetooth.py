@@ -6,7 +6,7 @@ import pymysql
 
 print("Start")
 
-bluetooth = serial.Serial('COM10', 9600, timeout = 1)
+bluetooth = serial.Serial('COM8', 9600, timeout = 1)
 
 cnx = pymysql.connect(host="clover.cclls6i3ttha.us-east-2.rds.amazonaws.com",port=3306,user="clover", password="clover1234", db="clover")
 cursor = cnx.cursor()
