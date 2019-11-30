@@ -1,4 +1,8 @@
 from bluepy import btle
+import time
+import datetime
+import mysql.connector
+import pymysql
 import os
 from concurrent import futures
 
@@ -107,7 +111,7 @@ def sendDataToServer(data):
                 "VALUES (%s, %s, %s)")
     now = datetime.datetime.now()
     dataStr = data.decode("utf-8")
-    dataArr = data.split()
+    dataArr = dataStr.split()
     moistVal = dataArr[0]
     distVal = dataArr[1]
     data_tracker = (moistVal, distVal, str(now))
