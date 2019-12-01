@@ -5,12 +5,20 @@ import mysql.connector
 import pymysql
 import os
 from concurrent import futures
+from subprocess import check_output
 
 global addr_var
 global delegate_global
 global perif_global
 
-addr_var = ['78:DB:2F:14:01:FE']
+addr_var = ['78:db:2f:14:01:fe']
+
+cnx = pymysql.connect(host="clover.cclls6i3ttha.us-east-2.rds.amazonaws.com",port=3306,user="clover", password="clover1234", db="clover")
+cursor = cnx.cursor()
+
+add_tracker = ("INSERT INTO plant_monitor "
+                "(moisture_level, light_intensity, date_time) "
+                "VALUES (%s, %s, %s)")
 
 class MyDelegate(btle.DefaultDelegate):
 
@@ -24,10 +32,10 @@ class MyDelegate(btle.DefaultDelegate):
         for ii in range(len(addr_var)):
             if delegate_global[ii]==self:
                 try:
-                    # data_decoded = data.decode("utf-8")
-                    perif_global[ii].writeCharacteristic(cHandle,struct.pack("b",55))
+                    data_decoded = data.decode("utf-8")
+                    #perif_global[ii].writeCharacteristic(cHandle,struct.pack("b",55))
                     print("Address: "+addr_var[ii])
-                    #print(data_decoded)
+                    print(data_decoded)
                     try:
                         sendDataToServer(data)
                     except:
@@ -38,7 +46,7 @@ class MyDelegate(btle.DefaultDelegate):
                     pass
                 try:
                     data_decoded = data.decode('utf-8')
-                    perif_global[ii].writeCharacteristic(cHandle,struct.pack("b",55))
+                   # perif_global[ii].writeCharacteristic(cHandle,struct.pack("b",55))
                     print("Address: "+addr_var[ii])
                     print(data_decoded)
                     try:
@@ -49,17 +57,34 @@ class MyDelegate(btle.DefaultDelegate):
                 except:
                     return
 
+def sendDataToServer(data):
+    now = datetime.datetime.now()
+    dataStr = data.decode("utf-8")
+    dataArr = dataStr.split()
+    moistVal = dataArr[0]
+    distVal = dataArr[1]
+    data_tracker = [moistVal, distVal, str(now)]
+    cursor.execute(add_tracker, data_tracker)
+    emp_no = cursor.lastrowid
+    cnx.commit()
+    print("Data has been sent to server")
+    print(data_tracker)
+    return
+
 def perif_loop(perif,indx):
     while True:
         try:
+            print("waiting for notifications...")
             if perif.waitForNotifications(1.0):
-                print("waiting for notifications...")
                 continue
         except:
             try:
+                perif.unpair
                 perif.disconnect()
+                print("disconnecting from "+perif.addr)
+                return
             except:
-                pass
+                return
             print("disconnecting perif: "+perif.addr+", index: "+str(indx))
             reestablish_connection(perif,perif.addr,indx)
             
@@ -92,31 +117,13 @@ def establish_connection(addr):
                     perif_global[jj] = p
                     p_delegate = MyDelegate(addr)
                     delegate_global[jj] = p_delegate
-                    p.withDelegate(p_delegate)
+                    p.setDelegate(p_delegate)
                     print("Connected to "+addr+" at index: "+str(jj))                    
                     perif_loop(p,jj)
         except:
+            check_output("sudo hciconfig hci0 down",shell=True).decode()
+            check_output("sudo hciconfig hci0 up",shell=True).decode()
             print("failed to connect to "+addr)
-            continue
-
-def sendDataToServer(data):
-    global moisture
-    global distance
-
-    cnx = pymysql.connect(host="clover.cclls6i3ttha.us-east-2.rds.amazonaws.com",port=3306,user="clover", password="clover1234", db="clover")
-    cursor = cnx.cursor()
-
-    add_tracker = ("INSERT INTO plant_monitor "
-                "(moisture_level, light_intensity, date_time) "
-                "VALUES (%s, %s, %s)")
-    now = datetime.datetime.now()
-    dataStr = data.decode("utf-8")
-    dataArr = dataStr.split()
-    moistVal = dataArr[0]
-    distVal = dataArr[1]
-    data_tracker = (moistVal, distVal, str(now))
-    cursor.execute(add_tracker, data_tracker)
-    emp_no = cursor.lastrowid
-    cnx.commit()
-    print("Data has been sent to server")
-    return
+            
+ex = futures.ProcessPoolExecutor(max_workers = os.cpu_count())
+results = ex.map(establish_connection,addr_var)
