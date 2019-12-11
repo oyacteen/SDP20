@@ -1,0 +1,48 @@
+// code to read in voltage values from solar panel, and convert to light intensity (low, medium, or high)
+// initializing value representing analog pin number
+int analogPin = 0;
+
+// insuffiecient light intesity boundary
+float inBound = 1.61;
+// lower light intesity boundary 
+float lowBound = 1.79; 
+// medium light intesity boundary
+float medBound = 2.50;
+// high light intensity boundary 
+float highBound = 3.11; 
+
+void setup() {
+ 
+    // Baud rate, in bits per second. Default is 9600
+    Serial.begin(9600);
+}
+
+void loop() {
+   // put your main code here, to run repeatedly:
+   int lightLevel = analogRead(analogPin);
+   // Convert the raw data value (0 - 1023) to voltage (0.0V - 5.0V):
+   float voltage = lightLevel * (5.0 / 1024.0);
+   // write the voltage value to the serial monitor:
+   //Serial.println(voltage);
+
+   if ((voltage >= inBound) && (voltage <= lowBound))  {
+    Serial.println("low light intensity"); //Serial.println(voltage);
+   }
+   else if ((voltage > lowBound) && (voltage <= medBound)) {
+    Serial.println("meduim light intensity"); //Serial.println(voltage);
+   }
+   else if ((voltage > medBound) && (voltage <= highBound)) {
+    Serial.println("high light intensity");  //Serial.println(voltage);
+   }
+
+   // upper and lower boundary checks
+   else if (voltage > highBound) {
+    Serial.println("light intensity too high!"); //Serial.println(voltage);
+   }
+   else if (voltage < inBound) {
+    Serial.println("light intensity too low!"); //Serial.println(voltage);
+   }
+   else {
+    Serial.println("Invalid light intensity reading!"); //Serial.println(voltage);
+   }
+}
